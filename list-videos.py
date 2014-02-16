@@ -16,31 +16,46 @@ import feedparser
 from lxml import html
 from lxml.cssselect import CSSSelector
 import urllib
+import re
 
 class TestedVideos(object):
-    YOUTUBE_REGEX = '[a-zA-Z0-9_-]{11}'
-    VIMEO_REGEX = ''
+    
+    def __init__(self):
+        self.patterns = [re.compile('[a-zA-Z0-9_-]{11}')]
 
     def load_feed_from(self, location):
         self.feed = feedparser.parse(location)
 
     def process_entries(self):
-        self.process_entry(self.feed.entries[0])
-        #for entry in self.feed.entries:
-         #   self.process_entry(entry)
+        for entry in self.feed.entries:
+            self.process_entry(entry)
             
     def process_entry(self, entry):
-        self.get_entry_page(entry)
-        
-    def get_entry_page(self, entry):
         root = html.parse(entry.link).getroot()
         elements = root.cssselect('div.embed-type-video iframe')
         
+        result = list()
         for element in elements:
-            result = self.analyze_url(element.get('src'))
+            url = element.get('src')
+            id = self.analyze_url(url)
+            if id:
+                result.append(id)
+            
+        print entry.title
+        for item in result:
+            print "  https://youtu.be/{0}".format(item)
+        print "-----------------------------------------"
             
     def analyze_url(self, url):
-        print urllib.unquote_plus(url)
+        url = urllib.unquote_plus(url)
+        
+        result = None
+        for pattern in self.patterns:
+            match =  pattern.search(url)
+            if match:
+                return match.group(0)
+                
+        return result
         
 tv = TestedVideos()
 
