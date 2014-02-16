@@ -11,12 +11,13 @@ Requirements:
 Tested with Python 2.7.6
 """
 
-import os.path
+import os
 import feedparser
 from lxml import html
 from lxml.cssselect import CSSSelector
 import urllib
 import re
+from datetime import datetime
 
 class TestedVideos(object):
     
@@ -44,7 +45,7 @@ class TestedVideos(object):
         print entry.title
         for item in result:
             print "  https://youtu.be/{0}".format(item)
-        print "-----------------------------------------"
+        print "-" * 80
             
     def analyze_url(self, url):
         url = urllib.unquote_plus(url)
@@ -63,6 +64,8 @@ if os.path.isfile('feed.xml'):
     tv.load_feed_from('feed.xml')
 else:
     tv.load_feed_from('http://www.tested.com/feeds/')
+
+print "List generated on {0}:\n".format(datetime.now())
 
 tv.process_entries()
     
