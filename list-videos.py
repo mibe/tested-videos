@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Listing video URLs of stories on tested.com.
+"""List video URLs of stories on tested.com.
 
 Copyright: (C) 2014 Michael Bemmerl
 License: MIT License (see LICENSE.txt)
@@ -18,6 +18,14 @@ from lxml.cssselect import CSSSelector
 import urllib
 import re
 from datetime import datetime
+import argparse
+
+parser = argparse.ArgumentParser(description="List video URLs of stories on tested.com.")
+parser.add_argument('--html', action='store_true', help="HTML output instead of plain text")
+parser.add_argument('--file', help="Load feed from a file instead from the Internet")
+parser.add_argument('--hide-empty', action='store_true', help="Hide stories without videos")
+
+args = parser.parse_args()
 
 class TestedVideos(object):
     
@@ -68,6 +76,7 @@ class TestedVideos(object):
 
     def print_html(self, hide_empty=False):
         html = '<!DOCTYPE html><html><head><title>tested.com videos</title></head><body>'
+        html = html + '<p>List generated on {0}'.format(datetime.now())
         
         for key in self.result:
             if not hide_empty or self.result[key]:
@@ -81,12 +90,17 @@ class TestedVideos(object):
 
 tv = TestedVideos()
 
-print "Loading feed..."
+if not args.html:
+    print "Loading feed..."
 
-if os.path.isfile('feed.xml'):
-    tv.load_feed_from('feed.xml')
+if args.file and os.path.isfile(args.file):
+    tv.load_feed_from(args.file)
 else:
     tv.load_feed_from('http://www.tested.com/feeds/')
     
 tv.process_entries()
-tv.print_html(True)
+
+if args.html:
+    tv.print_html(args.hide_empty)
+else:
+    tv.print_plain(args.hide_empty)
