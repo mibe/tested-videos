@@ -66,6 +66,19 @@ class TestedVideos(object):
                     print "  https://youtu.be/{0}".format(item)
                 print "-" * 80
 
+    def print_html(self, hide_empty=False):
+        html = '<!DOCTYPE html><html><head><title>tested.com videos</title></head><body>'
+        
+        for key in self.result:
+            if not hide_empty or self.result[key]:
+                html = html + '<h3>' + key + '</h3><ul>'
+                for item in self.result[key]:
+                    html = html + '<li><a href=\"https://youtu.be/{0}\">https://youtu.be/{0}</a></li>'.format(item)
+                html = html + '</ul>'
+        
+        html = html + '</body></html>'
+        print html
+
 tv = TestedVideos()
 
 print "Loading feed..."
@@ -76,4 +89,4 @@ else:
     tv.load_feed_from('http://www.tested.com/feeds/')
     
 tv.process_entries()
-tv.print_plain(True)
+tv.print_html(True)
