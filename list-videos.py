@@ -23,6 +23,7 @@ class TestedVideos(object):
     
     def __init__(self):
         self.patterns = [re.compile('[a-zA-Z0-9_-]{11}')]
+        self.result = dict()
 
     def load_feed_from(self, location):
         self.feed = feedparser.parse(location)
@@ -42,10 +43,7 @@ class TestedVideos(object):
             if id:
                 result.append(id)
             
-        print entry.title
-        for item in result:
-            print "  https://youtu.be/{0}".format(item)
-        print "-" * 80
+        self.result[entry.title] = result
             
     def analyze_url(self, url):
         url = urllib.unquote_plus(url)
@@ -58,14 +56,24 @@ class TestedVideos(object):
                 
         return result
         
+    def print_plain(self, hide_empty=False):
+        print "List generated on {0}:\n".format(datetime.now())
+        
+        for key in self.result:
+            if not hide_empty or self.result[key]:
+                print key
+                for item in self.result[key]:
+                    print "  https://youtu.be/{0}".format(item)
+                print "-" * 80
+
 tv = TestedVideos()
+
+print "Loading feed..."
 
 if os.path.isfile('feed.xml'):
     tv.load_feed_from('feed.xml')
 else:
     tv.load_feed_from('http://www.tested.com/feeds/')
-
-print "List generated on {0}:\n".format(datetime.now())
-
-tv.process_entries()
     
+tv.process_entries()
+tv.print_plain(True)
