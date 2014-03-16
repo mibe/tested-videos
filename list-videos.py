@@ -30,8 +30,18 @@ args = parser.parse_args()
 class TestedVideos(object):
     
     def __init__(self):
-        self.patterns = [re.compile('[a-zA-Z0-9_-]{11}')]
         self.result = dict()
+        self.providers = dict()
+
+        self.providers['youtube'] = dict()
+        self.providers['youtube']['pattern'] = re.compile('[a-zA-Z0-9_-]{11}')
+        self.providers['youtube']['group'] = 0
+        self.providers['youtube']['template'] = 'https://youtu.be/{0}'
+
+        self.providers['vimeo'] = dict()
+        self.providers['vimeo']['pattern'] = re.compile('vimeo.+/(\d+)')
+        self.providers['vimeo']['group'] = 1
+        self.providers['vimeo']['template'] = 'https://vimeo.com/{0}'
 
     def load_feed_from(self, location):
         self.feed = feedparser.parse(location)
@@ -47,22 +57,25 @@ class TestedVideos(object):
         result = list()
         for element in elements:
             url = element.get('src')
-            id = self.analyze_url(url)
-            if id:
-                result.append(id)
+            data = self.analyze_url(url)
+            if data:
+                result.append(data)
             
         self.result[entry.title] = result
             
     def analyze_url(self, url):
         url = urllib.unquote_plus(url)
         
-        result = None
-        for pattern in self.patterns:
-            match =  pattern.search(url)
+        for name in self.providers.keys():
+            provider = self.providers[name]
+            match =  provider['pattern'].search(url)
             if match:
-                return match.group(0)
+                result = dict()
+                result['provider'] = name
+                result['token'] = match.group(provider['group'])
+                return result
                 
-        return result
+        return None
         
     def print_plain(self, hide_empty=False):
         print "List generated on {0}:\n".format(datetime.now())
@@ -71,7 +84,8 @@ class TestedVideos(object):
             if not hide_empty or self.result[key]:
                 print key
                 for item in self.result[key]:
-                    print "  https://youtu.be/{0}".format(item)
+                    url = self.build_video_url(item['provider'], item['token'])
+                    print "  " + url
                 print "-" * 80
 
     def print_html(self, hide_empty=False):
@@ -82,11 +96,18 @@ class TestedVideos(object):
             if not hide_empty or self.result[key]:
                 html = html + '<h3>' + key + '</h3><ul>'
                 for item in self.result[key]:
-                    html = html + '<li><a href=\"https://youtu.be/{0}\">https://youtu.be/{0}</a></li>'.format(item)
+                    url = self.build_video_url(item['provider'], item['token'])
+                    html = html + '<li><a href=\"{0}\">{0}</a></li>'.format(url)
                 html = html + '</ul>'
         
         html = html + '</body></html>'
         print html
+        
+    def build_video_url(self, provider, token):
+        if provider in self.providers:
+            return self.providers[provider]['template'].format(token)
+        else:
+            return None
 
 tv = TestedVideos()
 
