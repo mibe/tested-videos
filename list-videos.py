@@ -24,24 +24,26 @@ parser = argparse.ArgumentParser(description="List video URLs of stories on test
 parser.add_argument('--html', action='store_true', help="HTML output instead of plain text")
 parser.add_argument('--file', help="Load feed from a file instead from the Internet")
 parser.add_argument('--hide-empty', action='store_true', help="Hide stories without videos")
+parser.add_argument('--ssl', action='store_true', help="Use HTTPS for URLs")
 
 args = parser.parse_args()
 
 class TestedVideos(object):
     
-    def __init__(self):
+    def __init__(self, ssl=False):
+        self.ssl = ssl
         self.result = dict()
         self.providers = dict()
 
         self.providers['youtube'] = dict()
         self.providers['youtube']['pattern'] = re.compile('[a-zA-Z0-9_-]{11}')
         self.providers['youtube']['group'] = 0
-        self.providers['youtube']['template'] = 'https://youtu.be/{0}'
+        self.providers['youtube']['template'] = '{0}://youtu.be/{1}'
 
         self.providers['vimeo'] = dict()
         self.providers['vimeo']['pattern'] = re.compile('vimeo.+?/(\d+)')
         self.providers['vimeo']['group'] = 1
-        self.providers['vimeo']['template'] = 'https://vimeo.com/{0}'
+        self.providers['vimeo']['template'] = '{0}://vimeo.com/{1}'
 
     def load_feed_from(self, location):
         self.feed = feedparser.parse(location)
@@ -105,11 +107,15 @@ class TestedVideos(object):
         
     def build_video_url(self, provider, token):
         if provider in self.providers:
-            return self.providers[provider]['template'].format(token)
+            scheme = 'http'
+            if self.ssl:
+                scheme += 's'
+                
+            return self.providers[provider]['template'].format(scheme, token)
         else:
             return None
 
-tv = TestedVideos()
+tv = TestedVideos(args.ssl)
 
 if not args.html:
     print "Loading feed..."
