@@ -39,7 +39,7 @@ class TestedVideos(object):
         self.providers['youtube']['template'] = 'https://youtu.be/{0}'
 
         self.providers['vimeo'] = dict()
-        self.providers['vimeo']['pattern'] = re.compile('vimeo.+/(\d+)')
+        self.providers['vimeo']['pattern'] = re.compile('vimeo.+?/(\d+)')
         self.providers['vimeo']['group'] = 1
         self.providers['vimeo']['template'] = 'https://vimeo.com/{0}'
 
