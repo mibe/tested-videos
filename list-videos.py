@@ -20,6 +20,8 @@ import re
 from datetime import datetime
 import argparse
 from collections import OrderedDict
+from unidecode import unidecode
+import sys
 
 parser = argparse.ArgumentParser(description="List video URLs of stories on tested.com.")
 parser.add_argument('--html', action='store_true', help="HTML output instead of plain text")
@@ -85,10 +87,16 @@ class TestedVideos(object):
         
         for key in self.result:
             if not hide_empty or self.result[key]:
-                print key
+                # Transliterate to ASCII for stupid Windows console:
+                if sys.platform == 'win32' and sys.stdout.encoding == 'cp850':
+                    print unidecode(key)
+                else:
+                    print key
+                    
                 for item in self.result[key]:
                     url = self.build_video_url(item['provider'], item['token'])
                     print "  " + url
+                    
                 print "-" * 80
 
     def print_html(self, hide_empty=False):
@@ -97,7 +105,12 @@ class TestedVideos(object):
         
         for key in self.result:
             if not hide_empty or self.result[key]:
-                html = html + '<h3>' + key + '</h3><ul>'
+                title = key
+                # Transliterate to ASCII for stupid Windows console:
+                if sys.platform == 'win32' and sys.stdout.encoding == 'cp850':
+                    title = unidecode(key)
+
+                html = html + '<h3>{0}</h3><ul>'.format(title)
                 for item in self.result[key]:
                     url = self.build_video_url(item['provider'], item['token'])
                     html = html + '<li><a href=\"{0}\">{0}</a></li>'.format(url)
