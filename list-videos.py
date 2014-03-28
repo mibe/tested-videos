@@ -19,6 +19,7 @@ import urllib
 import re
 from datetime import datetime
 import argparse
+from collections import OrderedDict
 
 parser = argparse.ArgumentParser(description="List video URLs of stories on tested.com.")
 parser.add_argument('--html', action='store_true', help="HTML output instead of plain text")
@@ -32,7 +33,7 @@ class TestedVideos(object):
     
     def __init__(self, ssl=False):
         self.ssl = ssl
-        self.result = dict()
+        self.result = OrderedDict()
         self.providers = dict()
 
         self.providers['youtube'] = dict()
@@ -70,7 +71,7 @@ class TestedVideos(object):
         
         for name in self.providers.keys():
             provider = self.providers[name]
-            match =  provider['pattern'].search(url)
+            match = provider['pattern'].search(url)
             if match:
                 result = dict()
                 result['provider'] = name
