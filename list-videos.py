@@ -6,7 +6,7 @@ Copyright: (C) 2014 Michael Bemmerl
 License: MIT License (see LICENSE.txt)
 
 Requirements:
-- Python (well, obviously ;-)
+- Python >= 2.7 (well, obviously ;-)
 
 Tested with Python 2.7.6
 """
@@ -28,13 +28,15 @@ parser.add_argument('--html', action='store_true', help="HTML output instead of 
 parser.add_argument('--file', help="Load feed from a file instead from the Internet")
 parser.add_argument('--hide-empty', action='store_true', help="Hide stories without videos")
 parser.add_argument('--ssl', action='store_true', help="Use HTTPS for URLs")
+parser.add_argument('--reverse', action='store_true', help="Display the stories in reversed order")
 
 args = parser.parse_args()
 
 class TestedVideos(object):
     
-    def __init__(self, ssl=False):
+    def __init__(self, ssl=False, reverse=False):
         self.ssl = ssl
+        self.reverse = reverse
         self.result = OrderedDict()
         self.providers = dict()
 
@@ -52,6 +54,9 @@ class TestedVideos(object):
         self.feed = feedparser.parse(location)
 
     def process_entries(self):
+        if self.reverse:
+            self.feed.entries.reverse()
+        
         for entry in self.feed.entries:
             self.process_entry(entry)
             
@@ -129,7 +134,7 @@ class TestedVideos(object):
         else:
             return None
 
-tv = TestedVideos(args.ssl)
+tv = TestedVideos(args.ssl, args.reverse)
 
 if not args.html:
     print "Loading feed..."
