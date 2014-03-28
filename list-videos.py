@@ -29,14 +29,26 @@ parser.add_argument('--file', help="Load feed from a file instead from the Inter
 parser.add_argument('--hide-empty', action='store_true', help="Hide stories without videos")
 parser.add_argument('--ssl', action='store_true', help="Use HTTPS for URLs")
 parser.add_argument('--reverse', action='store_true', help="Display the stories in reversed order")
+parser.add_argument('--only-new', action='store_true', help="Only display stories which were published since last invoke")
 
 args = parser.parse_args()
 
 class TestedVideos(object):
+    LASTRUN_FILE = 'lastrun'
     
-    def __init__(self, ssl=False, reverse=False):
+    def __init__(self, ssl=False, reverse=False, only_new=False):
         self.ssl = ssl
         self.reverse = reverse
+        self.only_new = only_new
+        
+        self.lastrun = datetime.min
+        if os.path.isfile(self.LASTRUN_FILE):
+            try:
+                with open(self.LASTRUN_FILE, 'r') as file:
+                    self.lastrun = datetime.strptime(file.readline(), '%c')
+            except:
+                os.unlink(self.LASTRUN_FILE)
+        
         self.result = OrderedDict()
         self.providers = dict()
 
@@ -49,6 +61,10 @@ class TestedVideos(object):
         self.providers['vimeo']['pattern'] = re.compile('vimeo.+?/(\d+)')
         self.providers['vimeo']['group'] = 1
         self.providers['vimeo']['template'] = '{0}://vimeo.com/{1}'
+        
+    def __del__(self):
+        with open(self.LASTRUN_FILE, 'w') as lastrun:
+            lastrun.write(datetime.now().strftime('%c'))
 
     def load_feed_from(self, location):
         self.feed = feedparser.parse(location)
@@ -61,6 +77,9 @@ class TestedVideos(object):
             self.process_entry(entry)
             
     def process_entry(self, entry):
+        if self.only_new and datetime(*entry.published_parsed[:6]) < self.lastrun:
+            return
+            
         root = html.parse(entry.link).getroot()
         elements = root.cssselect('div.embed-type-video iframe')
         
@@ -88,6 +107,10 @@ class TestedVideos(object):
         return None
         
     def print_plain(self, hide_empty=False):
+        if not self.result:
+            print "No stories or no new stories found."
+            return
+            
         print "List generated on {0}:\n".format(datetime.now())
         
         for key in self.result:
@@ -134,7 +157,7 @@ class TestedVideos(object):
         else:
             return None
 
-tv = TestedVideos(args.ssl, args.reverse)
+tv = TestedVideos(args.ssl, args.reverse, args.only_new)
 
 if not args.html:
     print "Loading feed..."
