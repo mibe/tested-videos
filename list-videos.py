@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 
-"""List video URLs of stories on tested.com.
+"""List video URLs of stories on tested.com. The official RSS feed is used for that.
 
 Copyright: (C) 2014 Michael Bemmerl
 License: MIT License (see LICENSE.txt)
 
 Requirements:
 - Python >= 2.7 (well, obviously ;-)
+- feedparser (https://pypi.python.org/pypi/feedparser)
+- lxml (https://pypi.python.org/pypi/lxml)
+- Unidecode (https://pypi.python.org/pypi/Unidecode)
 
-Tested with Python 2.7.6
+Tested with Python 2.7.6, feedparser 5.1.3, lxml 3.3.1 and Unidecode 0.04.14
 """
 
 import os
@@ -35,6 +38,7 @@ args = parser.parse_args()
 
 
 class TestedVideos(object):
+    # File, in which the date and time the last time this class was active is saved to.
     LASTRUN_FILE = 'lastrun'
     
     def __init__(self, ssl=False, reverse=False, only_new=False):
@@ -43,6 +47,7 @@ class TestedVideos(object):
         self.only_new = only_new
         
         self.lastrun = datetime.min
+        # Check if the lastrun file is existing. If yes, try to parse its contents.
         if os.path.isfile(self.LASTRUN_FILE):
             try:
                 with open(self.LASTRUN_FILE, 'r') as file:
@@ -53,6 +58,7 @@ class TestedVideos(object):
         self.result = OrderedDict()
         self.providers = dict()
 
+        # Generate the list of supported video providers.
         self.providers['youtube'] = dict()
         self.providers['youtube']['pattern'] = re.compile('[a-zA-Z0-9_-]{11}')
         self.providers['youtube']['group'] = 0
@@ -64,13 +70,20 @@ class TestedVideos(object):
         self.providers['vimeo']['template'] = '{0}://vimeo.com/{1}'
         
     def __del__(self):
+        # Save the current date & time to the lastrun file. This is used for displaying
+        # feed entries which were published after this date.
         with open(self.LASTRUN_FILE, 'w') as lastrun:
             lastrun.write(datetime.now().strftime('%c'))
 
     def load_feed_from(self, location):
+        """Loads the feed. location can be a URL or path to a file."""
         self.feed = feedparser.parse(location)
 
     def process_entries(self):
+        """Start processing all feed entries.
+        
+        This must be called before calling any print_*-methods."""
+        # Reverse the feed entries when this is desired.
         if self.reverse:
             self.feed.entries.reverse()
         
@@ -78,10 +91,15 @@ class TestedVideos(object):
             self.process_entry(entry)
             
     def process_entry(self, entry):
+        """Process a single feed entry."""
+        # Nothing to do here if the published item date is older than the last time
+        # this class was active. This does of course only apply if this behavior is desired.
         if self.only_new and datetime(*entry.published_parsed[:6]) < self.lastrun:
             return
             
         root = html.parse(entry.link).getroot()
+        # As of writing this, the videos on tested.com are embedded via an iframe.
+        # This HTML element has to be found. This element can occur multiple times.
         elements = root.cssselect('div.embed-type-video iframe')
         
         result = list()
@@ -94,8 +112,12 @@ class TestedVideos(object):
         self.result[entry.title] = result
             
     def analyze_url(self, url):
+        """Tries to get the video token from a specified URL."""
+        # Sometimes the video URLs are urlencoded. So decode it...
         url = urllib.unquote_plus(url)
         
+        # Check for every provider if the regex is matching on the URL.
+        # If yes, return a dictionary containing the provider and the video token.
         for name in self.providers.keys():
             provider = self.providers[name]
             match = provider['pattern'].search(url)
@@ -108,6 +130,7 @@ class TestedVideos(object):
         return None
         
     def print_plain(self, hide_empty=False):
+        """Display the found story titles and the containing video URLs on stdout."""
         if not self.result:
             print "No stories or no new stories found."
             return
@@ -115,6 +138,8 @@ class TestedVideos(object):
         print "List generated on {0}:\n".format(datetime.now())
         
         for key in self.result:
+            # Skip the story if it does not contain any video URLs, but only if this
+            # behavior is desired.
             if not hide_empty or self.result[key]:
                 # Transliterate to ASCII for stupid Windows console:
                 if sys.platform == 'win32' and sys.stdout.encoding == 'cp850':
@@ -129,10 +154,13 @@ class TestedVideos(object):
                 print "-" * 80
 
     def print_html(self, hide_empty=False):
+        """Display the found story titles and the containing video URLs in HTML format."""
         html = '<!DOCTYPE html><html><head><title>tested.com videos</title></head><body>'
         html = html + '<p>List generated on {0}'.format(datetime.now())
         
         for key in self.result:
+            # Skip the story if it does not contain any video URLs, but only if this
+            # behavior is desired.
             if not hide_empty or self.result[key]:
                 title = key
                 # Transliterate to ASCII for stupid Windows console:
@@ -149,6 +177,7 @@ class TestedVideos(object):
         print html
         
     def build_video_url(self, provider, token):
+        """Builds a URL to the video provider by specifying the provider and the video token."""
         if provider in self.providers:
             scheme = 'http'
             if self.ssl:
@@ -158,18 +187,23 @@ class TestedVideos(object):
         else:
             return None
 
+# Instantiate class with arguments from the command line
 tv = TestedVideos(args.ssl, args.reverse, args.only_new)
 
+# Don't print the "please wait" message when in HTML mode
 if not args.html:
     print "Loading feed..."
 
+# Use the feed file if it is existing. Use the official feed URL otherwise.
 if args.file and os.path.isfile(args.file):
     tv.load_feed_from(args.file)
 else:
     tv.load_feed_from('http://www.tested.com/feeds/')
-    
+
+# Process all feed entries
 tv.process_entries()
 
+# Choose between the output modes.
 if args.html:
     tv.print_html(args.hide_empty)
 else:
