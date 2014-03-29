@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""List video URLs of stories on tested.com. The official RSS feed is used for that.
+"""List video URLs in stories on tested.com. The official RSS feed is used for that.
 
 Copyright: (C) 2014 Michael Bemmerl
 License: MIT License (see LICENSE.txt)
@@ -25,7 +25,7 @@ from collections import OrderedDict
 from unidecode import unidecode
 import sys
 
-parser = argparse.ArgumentParser(description="List video URLs of stories on tested.com.")
+parser = argparse.ArgumentParser(description="List video URLs in stories on tested.com.")
 parser.add_argument('--html', action='store_true', help="HTML output instead of plain text")
 parser.add_argument('--file', help="Load feed from a file instead from the Internet")
 parser.add_argument('--hide-empty', action='store_true', help="Hide stories without videos")
