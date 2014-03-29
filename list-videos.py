@@ -14,7 +14,6 @@ Tested with Python 2.7.6
 import os
 import feedparser
 from lxml import html
-from lxml.cssselect import CSSSelector
 import urllib
 import re
 from datetime import datetime
@@ -29,9 +28,11 @@ parser.add_argument('--file', help="Load feed from a file instead from the Inter
 parser.add_argument('--hide-empty', action='store_true', help="Hide stories without videos")
 parser.add_argument('--ssl', action='store_true', help="Use HTTPS for URLs")
 parser.add_argument('--reverse', action='store_true', help="Display the stories in reversed order")
-parser.add_argument('--only-new', action='store_true', help="Only display stories which were published since last invoke")
+parser.add_argument('--only-new', action='store_true',
+                    help="Only display stories which were published since last invoke")
 
 args = parser.parse_args()
+
 
 class TestedVideos(object):
     LASTRUN_FILE = 'lastrun'
