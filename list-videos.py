@@ -97,6 +97,10 @@ class TestedVideos(object):
         if self.only_new and datetime(*entry.published_parsed[:6]) < self.lastrun:
             return
             
+        # Filter content for "Premium" subscribers.
+        if "/premium/" in entry.link:
+            return
+            
         root = html.parse(entry.link).getroot()
         # As of writing this, the videos on tested.com are embedded via an iframe.
         # This HTML element has to be found. This element can occur multiple times.
