@@ -89,7 +89,7 @@ class TestedVideos(object):
         
         for entry in self.feed.entries:
             self.process_entry(entry)
-            
+           
     def process_entry(self, entry):
         """Process a single feed entry."""
         # Nothing to do here if the published item date is older than the last time
@@ -101,18 +101,31 @@ class TestedVideos(object):
         if "/premium/" in entry.link:
             return
             
+        result = list()
+        
         root = html.parse(entry.link).getroot()
+        iframes = root.cssselect('div.embed-type-video iframe')
+        divs = root.cssselect('div.embed-type-video div')
+        
         # As of writing this, the videos on tested.com are embedded via an iframe.
         # This HTML element has to be found. This element can occur multiple times.
-        elements = root.cssselect('div.embed-type-video iframe')
-        
-        result = list()
-        for element in elements:
+        for element in iframes:
             url = element.get('src')
             data = self.analyze_url(url)
             if data:
                 result.append(data)
-            
+                
+        # Well, as of writing THIS (August 2014), they also use the YouTube iframe API.
+        # This sucks a bit...
+        for element in divs:
+            id = element.get('id')
+            match = re.match('player-([a-zA-Z0-9_-]{11})', id)
+            if match:
+                entity = dict()
+                entity['provider'] = 'youtube'
+                entity['token'] = match.group(1)
+                result.append(entity)
+                
         self.result[entry.title] = result
             
     def analyze_url(self, url):
