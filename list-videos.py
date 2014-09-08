@@ -119,11 +119,18 @@ class TestedVideos(object):
         # This sucks a bit...
         for element in divs:
             id = element.get('id')
-            match = re.match('player-([a-zA-Z0-9_-]{11})', id)
-            if match:
+            className = element.get('class')
+            if id:
+                match = re.match('player-([a-zA-Z0-9_-]{11})', id)
+                if match:
+                    entity = dict()
+                    entity['provider'] = 'youtube'
+                    entity['token'] = match.group(1)
+                    result.append(entity)
+            elif className:
                 entity = dict()
                 entity['provider'] = 'youtube'
-                entity['token'] = match.group(1)
+                entity['token'] = element.get('data-video-id');
                 result.append(entity)
                 
         self.result[entry.title] = result
