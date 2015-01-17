@@ -2,7 +2,7 @@
 
 """List video URLs in stories on tested.com. The official RSS feed is used for that.
 
-Copyright: (C) 2014 Michael Bemmerl
+Copyright: (C) 2014-2015 Michael Bemmerl
 License: MIT License (see LICENSE.txt)
 
 Requirements:
@@ -68,6 +68,11 @@ class TestedVideos(object):
         self.providers['vimeo']['pattern'] = re.compile('vimeo.+?/(\d+)')
         self.providers['vimeo']['group'] = 1
         self.providers['vimeo']['template'] = '{0}://vimeo.com/{1}'
+
+        self.providers['vine'] = dict()
+        self.providers['vine']['pattern'] = re.compile('vine\.co/v/([a-zA-Z0-9_-]{11})')
+        self.providers['vine']['group'] = 1
+        self.providers['vine']['template'] = '{0}://vine.co/v/{1}'
         
     def __del__(self):
         # Save the current date & time to the lastrun file. This is used for displaying
