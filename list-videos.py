@@ -144,6 +144,10 @@ class TestedVideos(object):
         """Tries to get the video token from a specified URL."""
         # Sometimes the video URLs are urlencoded. So decode it...
         url = urllib.unquote_plus(url)
+
+        # Videos directly embedded from Kickstarter are not supported.
+        if "kickstarter.com" in url:
+            return None
         
         # Check for every provider if the regex is matching on the URL.
         # If yes, return a dictionary containing the provider and the video token.
