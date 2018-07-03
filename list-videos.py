@@ -2,16 +2,16 @@
 
 """List video URLs in stories on tested.com. The official RSS feed is used for that.
 
-Copyright: (C) 2014-2015 Michael Bemmerl
+Copyright: (C) 2014-2015,2018 Michael Bemmerl
 License: MIT License (see LICENSE.txt)
 
 Requirements:
-- Python >= 2.7 (well, obviously ;-)
+- Python >= 2.7.9 (well, obviously ;-)
 - feedparser (https://pypi.python.org/pypi/feedparser)
 - lxml (https://pypi.python.org/pypi/lxml)
 - Unidecode (https://pypi.python.org/pypi/Unidecode)
 
-Tested with Python 2.7.6, feedparser 5.1.3, lxml 3.3.1 and Unidecode 0.04.14
+Tested with Python 2.7.15, feedparser 5.1.3, lxml 3.3.1 and Unidecode 0.04.14
 """
 
 import os
@@ -24,12 +24,12 @@ import argparse
 from collections import OrderedDict
 from unidecode import unidecode
 import sys
+from StringIO import StringIO
 
 parser = argparse.ArgumentParser(description="List video URLs in stories on tested.com.")
 parser.add_argument('--html', action='store_true', help="HTML output instead of plain text")
 parser.add_argument('--file', help="Load feed from a file instead from the Internet")
 parser.add_argument('--hide-empty', action='store_true', help="Hide stories without videos")
-parser.add_argument('--ssl', action='store_true', help="Use HTTPS for URLs")
 parser.add_argument('--reverse', action='store_true', help="Display the stories in reversed order")
 parser.add_argument('--only-new', action='store_true',
                     help="Only display stories which were published since last invoke")
@@ -41,8 +41,7 @@ class TestedVideos(object):
     # File, in which the date and time the last time this class was active is saved to.
     LASTRUN_FILE = 'lastrun'
     
-    def __init__(self, ssl=False, reverse=False, only_new=False):
-        self.ssl = ssl
+    def __init__(self, reverse=False, only_new=False):
         self.reverse = reverse
         self.only_new = only_new
         
@@ -105,10 +104,13 @@ class TestedVideos(object):
         # Filter content for "Premium" subscribers.
         if "/premium/" in entry.link:
             return
+        
+        handle = urllib.urlopen(entry.link)
+        content = handle.read()
             
         result = list()
         
-        root = html.parse(entry.link).getroot()
+        root = html.parse(StringIO(content)).getroot()
         iframes = root.cssselect('div.embed-type-video iframe')
         divs = root.cssselect('div.embed-type-video div')
         
@@ -212,16 +214,14 @@ class TestedVideos(object):
     def build_video_url(self, provider, token):
         """Builds a URL to the video provider by specifying the provider and the video token."""
         if provider in self.providers:
-            scheme = 'http'
-            if self.ssl:
-                scheme += 's'
+            scheme = 'https'
                 
             return self.providers[provider]['template'].format(scheme, token)
         else:
             return None
 
 # Instantiate class with arguments from the command line
-tv = TestedVideos(args.ssl, args.reverse, args.only_new)
+tv = TestedVideos(args.reverse, args.only_new)
 
 # Don't print the "please wait" message when in HTML mode
 if not args.html:
@@ -231,7 +231,7 @@ if not args.html:
 if args.file and os.path.isfile(args.file):
     tv.load_feed_from(args.file)
 else:
-    tv.load_feed_from('http://www.tested.com/feeds/')
+    tv.load_feed_from('https://www.tested.com/feeds/')
 
 # Process all feed entries
 tv.process_entries()
