@@ -14,8 +14,8 @@ Currently the following video providers are supported:
 Usage
 -----
 
-    usage: list-videos.py [-h] [--html] [--file FILE] [--hide-empty] [--ssl]
-                          [--reverse] [--only-new]
+    usage: list-videos.py [-h] [--html] [--file FILE] [--hide-empty] [--reverse]
+                          [--only-new]
 
     List video URLs of stories on tested.com.
 
@@ -24,7 +24,6 @@ Usage
       --html        HTML output instead of plain text
       --file FILE   Load feed from a file instead from the Internet
       --hide-empty  Hide stories without videos
-      --ssl         Use HTTPS for URLs
       --reverse     Display the stories in reversed order
       --only-new    Only display stories which were published since last invoke
 
@@ -62,12 +61,12 @@ Output:
 Requirements
 -----
 
-* Python >= 2.7 (well, obviously ;-)
+* Python >= 2.7.9 (well, obviously ;-)
 * feedparser (https://pypi.python.org/pypi/feedparser)
 * lxml (https://pypi.python.org/pypi/lxml)
 * Unidecode (https://pypi.python.org/pypi/Unidecode)
 
-Tested with Python 2.7.6, feedparser 5.1.3, lxml 3.3.1 and Unidecode 0.04.14
+Tested with Python 2.7.15, feedparser 5.1.3, lxml 3.3.1 and Unidecode 0.04.14
 
 License
 -----
