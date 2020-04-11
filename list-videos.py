@@ -2,29 +2,30 @@
 
 """List video URLs in stories on tested.com. The official RSS feed is used for that.
 
-Copyright: (C) 2014-2015,2018 Michael Bemmerl
+Copyright: (C) 2014-2015,2018,2020 Michael Bemmerl
 License: MIT License (see LICENSE.txt)
 
 Requirements:
-- Python >= 2.7.9 (well, obviously ;-)
+- Python >= 3 (well, obviously ;-)
 - feedparser (https://pypi.python.org/pypi/feedparser)
 - lxml (https://pypi.python.org/pypi/lxml)
 - Unidecode (https://pypi.python.org/pypi/Unidecode)
+- cssselect (https://pypi.org/project/cssselect/)
 
-Tested with Python 2.7.15, feedparser 5.1.3, lxml 3.3.1 and Unidecode 0.04.14
+Tested with Python 3.8.2, feedparser 5.2.1, lxml 4.5.0, Unidecode 1.1.1 and cssselect 1.1.0
 """
 
 import os
 import feedparser
 from lxml import html
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import re
 from datetime import datetime
 import argparse
 from collections import OrderedDict
 from unidecode import unidecode
 import sys
-from StringIO import StringIO
+from io import StringIO
 
 parser = argparse.ArgumentParser(description="List video URLs in stories on tested.com.")
 parser.add_argument('--html', action='store_true', help="HTML output instead of plain text")
@@ -105,8 +106,8 @@ class TestedVideos(object):
         if "/premium/" in entry.link:
             return
         
-        handle = urllib.urlopen(entry.link)
-        content = handle.read()
+        handle = urllib.request.urlopen(entry.link)
+        content = handle.read().decode()
             
         result = list()
         
@@ -145,7 +146,7 @@ class TestedVideos(object):
     def analyze_url(self, url):
         """Tries to get the video token from a specified URL."""
         # Sometimes the video URLs are urlencoded. So decode it...
-        url = urllib.unquote_plus(url)
+        url = urllib.parse.unquote_plus(url)
 
         # Videos directly embedded from Kickstarter are not supported.
         if "kickstarter.com" in url:
@@ -153,7 +154,7 @@ class TestedVideos(object):
         
         # Check for every provider if the regex is matching on the URL.
         # If yes, return a dictionary containing the provider and the video token.
-        for name in self.providers.keys():
+        for name in list(self.providers.keys()):
             provider = self.providers[name]
             match = provider['pattern'].search(url)
             if match:
@@ -167,10 +168,10 @@ class TestedVideos(object):
     def print_plain(self, hide_empty=False):
         """Display the found story titles and the containing video URLs on stdout."""
         if not self.result:
-            print "No stories or no new stories found."
+            print("No stories or no new stories found.")
             return
             
-        print "List generated on {0}:\n".format(datetime.now())
+        print("List generated on {0}:\n".format(datetime.now()))
         
         for key in self.result:
             # Skip the story if it does not contain any video URLs, but only if this
@@ -178,15 +179,15 @@ class TestedVideos(object):
             if not hide_empty or self.result[key]:
                 # Transliterate to ASCII for stupid Windows console:
                 if sys.platform == 'win32' and sys.stdout.encoding == 'cp850':
-                    print unidecode(key)
+                    print(unidecode(key))
                 else:
-                    print key
+                    print(key)
                     
                 for item in self.result[key]:
                     url = self.build_video_url(item['provider'], item['token'])
-                    print "  " + url
+                    print("  " + url)
                     
-                print "-" * 80
+                print("-" * 80)
 
     def print_html(self, hide_empty=False):
         """Display the found story titles and the containing video URLs in HTML format."""
@@ -209,7 +210,7 @@ class TestedVideos(object):
                 html = html + '</ul>'
         
         html = html + '</body></html>'
-        print html
+        print(html)
         
     def build_video_url(self, provider, token):
         """Builds a URL to the video provider by specifying the provider and the video token."""
@@ -225,7 +226,7 @@ tv = TestedVideos(args.reverse, args.only_new)
 
 # Don't print the "please wait" message when in HTML mode
 if not args.html:
-    print "Loading feed..."
+    print("Loading feed...")
 
 # Use the feed file if it is existing. Use the official feed URL otherwise.
 if args.file and os.path.isfile(args.file):
