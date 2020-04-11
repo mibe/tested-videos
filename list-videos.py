@@ -18,7 +18,9 @@ Tested with Python 3.8.2, feedparser 5.2.1, lxml 4.5.0, Unidecode 1.1.1 and csss
 import os
 import feedparser
 from lxml import html
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 import re
 from datetime import datetime
 import argparse
@@ -66,12 +68,12 @@ class TestedVideos(object):
         self.providers['youtube']['template'] = '{0}://youtu.be/{1}'
 
         self.providers['vimeo'] = dict()
-        self.providers['vimeo']['pattern'] = re.compile('vimeo.+?/(\d+)')
+        self.providers['vimeo']['pattern'] = re.compile('vimeo.+?/(\\d+)')
         self.providers['vimeo']['group'] = 1
         self.providers['vimeo']['template'] = '{0}://vimeo.com/{1}'
 
         self.providers['vine'] = dict()
-        self.providers['vine']['pattern'] = re.compile('vine\.co/v/([a-zA-Z0-9_-]{11})')
+        self.providers['vine']['pattern'] = re.compile('vine\\.co/v/([a-zA-Z0-9_-]{11})')
         self.providers['vine']['group'] = 1
         self.providers['vine']['template'] = '{0}://vine.co/v/{1}'
         
@@ -142,7 +144,7 @@ class TestedVideos(object):
             elif className:
                 entity = dict()
                 entity['provider'] = 'youtube'
-                entity['token'] = element.get('data-video-id');
+                entity['token'] = element.get('data-video-id')
                 result.append(entity)
                 
         self.result[entry.title] = result
@@ -224,6 +226,7 @@ class TestedVideos(object):
             return self.providers[provider]['template'].format(scheme, token)
         else:
             return None
+
 
 # Instantiate class with arguments from the command line
 tv = TestedVideos(args.reverse, args.only_new)
