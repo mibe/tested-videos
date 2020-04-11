@@ -26,6 +26,7 @@ from collections import OrderedDict
 from unidecode import unidecode
 import sys
 from io import StringIO
+import atexit
 
 parser = argparse.ArgumentParser(description="List video URLs in stories on tested.com.")
 parser.add_argument('--html', action='store_true', help="HTML output instead of plain text")
@@ -74,7 +75,10 @@ class TestedVideos(object):
         self.providers['vine']['group'] = 1
         self.providers['vine']['template'] = '{0}://vine.co/v/{1}'
         
-    def __del__(self):
+        # Register exit function
+        atexit.register(self.save_lastrun)
+        
+    def save_lastrun(self):
         # Save the current date & time to the lastrun file. This is used for displaying
         # feed entries which were published after this date.
         with open(self.LASTRUN_FILE, 'w') as lastrun:
