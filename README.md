@@ -10,6 +10,7 @@ its content analyzed for videos.
 Currently the following video providers are supported:
 * YouTube
 * Vimeo
+* Vine
 
 Usage
 -----
@@ -61,12 +62,17 @@ Output:
 Requirements
 -----
 
-* Python >= 2.7.9 (well, obviously ;-)
+* Python >= 3 (well, obviously ;-)
 * feedparser (https://pypi.python.org/pypi/feedparser)
 * lxml (https://pypi.python.org/pypi/lxml)
 * Unidecode (https://pypi.python.org/pypi/Unidecode)
+* cssselect (https://pypi.org/project/cssselect/)
 
-Tested with Python 2.7.15, feedparser 5.1.3, lxml 3.3.1 and Unidecode 0.04.14
+Tested with Python 3.8.2, feedparser 5.2.1, lxml 4.5.0, Unidecode 1.1.1 and cssselect 1.1.0
+
+Installation
+-----
+Run ```pip install -r requirements.txt``` to install the dependencies with pip.
 
 License
 -----
